@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: api-gateway
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# Overridden by CORE_FACADE_BASE_URL env var in docker-compose (service DNS name instead of localhost)
+downstream:
+  core-facade-rest:
+    base-url: ${CORE_FACADE_BASE_URL:http://localhost:8082}
+
+gateway:
+  rate-limit:
+    requests-per-window: 20
+    window-seconds: 10

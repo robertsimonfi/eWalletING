@@ -19,3 +19,7 @@ Claude commits locally as modules are completed, but confirms with Robert before
 ## 2026-08-06 — Target Spring Boot 4.1.0, not Spring Boot 3
 
 The original brief specified Spring Boot 3, but as of this build date Spring Initializr no longer offers any 3.x line — only 4.0.x/4.1.x (Spring Framework 7). Robert chose to target the current generation (4.1.0) rather than hand-pin an aged-out 3.x version, since the interview should reflect what's actually current. Watch for API differences from Boot 3 tutorials/docs (e.g. some Spring Security and WebFlux changes) while working through the modules.
+
+## 2026-08-06 — api-gateway: blocking WebMVC Gateway + Spring Cloud 2025.1.2 despite a minor Boot version lag
+
+Used `spring-cloud-starter-gateway-server-webmvc` (blocking, matches the rest of this servlet-stack sandbox) instead of the classic reactive/WebFlux Spring Cloud Gateway. Spring Cloud's latest release train (2025.1.2) officially targets Spring Boot 4.0.7, one minor version behind the 4.1.0 this project uses — proceeded anyway since Boot minor bumps are additive within a major generation, and verified live afterward (routing, rate limiting, logging, and the full circuit-breaker chain all confirmed working through the gateway) rather than just assuming compatibility. Revisit if a Spring Cloud release targeting 4.1.x ships later.
