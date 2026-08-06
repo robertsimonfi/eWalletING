@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://ewalleting.com/legacycore"
+           targetNamespace="http://ewalleting.com/legacycore"
+           elementFormDefault="qualified">
+
+    <!-- getAccountBalance -->
+
+    <xs:element name="getAccountBalanceRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="accountId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getAccountBalanceResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="accountId" type="xs:string"/>
+                <xs:element name="balance" type="xs:decimal"/>
+                <xs:element name="currency" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- getCustomerRecord -->
+
+    <xs:element name="getCustomerRecordRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="customerId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getCustomerRecordResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="customerId" type="xs:string"/>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="dateOfBirth" type="xs:date"/>
+                <xs:element name="kycVerified" type="xs:boolean"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Fault: legacy core throws this when an account/customer id isn't found -->
+
+    <xs:element name="recordNotFoundFault">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="requestedId" type="xs:string"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

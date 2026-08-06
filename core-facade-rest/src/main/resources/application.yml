@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: core-facade-rest
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Overridden by SOAP_ENDPOINT env var in docker-compose (service DNS name instead of localhost)
+legacy-core-soap:
+  endpoint: ${SOAP_ENDPOINT:http://localhost:8081/ws}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      legacyCoreSoap:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        # A "not found" SOAP fault is a normal business answer, not a technical failure —
+        # it must not count toward tripping the breaker.
+        ignore-exceptions:
+          - org.springframework.ws.soap.client.SoapFaultClientException
