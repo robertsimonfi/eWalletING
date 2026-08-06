@@ -1,8 +1,29 @@
 services:
+  identity-provider:
+    image: quay.io/keycloak/keycloak:26.7.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./identity-provider/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8180:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
   legacy-core-soap:
     build: ./legacy-core-soap
     ports:
       - "8081:8081"
+      - "5005:5005" # remote debug port — attach IntelliJ here
+    environment:
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 5s
@@ -14,10 +35,15 @@ services:
     build: ./core-facade-rest
     ports:
       - "8082:8082"
+      - "5006:5005" # remote debug port — attach IntelliJ here
     environment:
       SOAP_ENDPOINT: http://legacy-core-soap:8081/ws
+      KEYCLOAK_JWK_SET_URI: http://identity-provider:8080/realms/ewalleting/protocol/openid-connect/certs
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       legacy-core-soap:
+        condition: service_healthy
+      identity-provider:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -30,10 +56,17 @@ services:
     build: ./api-gateway
     ports:
       - "8080:8080"
+      - "5007:5005" # remote debug port — attach IntelliJ here
     environment:
       CORE_FACADE_BASE_URL: http://core-facade-rest:8082
+      KEYCLOAK_TOKEN_URI: http://identity-provider:8080/realms/ewalleting/protocol/openid-connect/token
+      KEYCLOAK_CLIENT_ID: api-gateway
+      KEYCLOAK_CLIENT_SECRET: api-gateway-dev-secret
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       core-facade-rest:
+        condition: service_healthy
+      identity-provider:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]

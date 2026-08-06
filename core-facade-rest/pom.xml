@@ -54,6 +54,13 @@
 			<version>2.3.0</version>
 		</dependency>
 
+		<!-- Validates the Bearer token api-gateway attaches — signature + expiry only,
+		     via the JWK set (see NOTES.md on why issuer isn't validated here). -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator-test</artifactId>

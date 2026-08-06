@@ -10,19 +10,19 @@ Where something here is simplified relative to the real spec or a real bank's st
 |---|---|
 | [`legacy-core-soap/`](legacy-core-soap/) | Legacy SOAP core-banking stub (Spring-WS, WSDL contract) |
 | [`core-facade-rest/`](core-facade-rest/) | REST facade over the SOAP service — anti-corruption layer + circuit breaker |
-| [`api-gateway/`](api-gateway/) | Spring Cloud Gateway — routing, rate limiting, logging |
-| `identity-provider/` | Keycloak config for OIDC |
-| `customer-web/` | OAuth2 authorization-code + PKCE client |
+| [`api-gateway/`](api-gateway/) | Spring Cloud Gateway — routing, rate limiting, logging, client-credentials to core-facade-rest |
+| [`identity-provider/`](identity-provider/) | Keycloak, realm pre-configured for both OAuth2 flows this sandbox uses |
+| [`customer-web/`](customer-web/) | OAuth2 authorization-code + PKCE client — real browser login against Keycloak |
 | `pki/` | Mini CA + TLS/mTLS scripts |
 | `credential-issuer/`, `mock-wallet-cli/`, `credential-verifier/` | Mock EUDI Wallet: issuance, selective disclosure, trust-list verification |
 | `outbox-publisher/`, `kafka-consumer-demo/` | Transactional outbox → Kafka event backbone |
 | `k8s/` | Deployment/Service/HPA manifests |
 
-**Status:** Module 0 (Docker Compose baseline) and Module 1 (SOAP→REST→Gateway) are built and verified. Everything below `identity-provider/` in the table above hasn't been built yet — see `DECISIONS.md` for build order and `NOTES.md` for what's simplified so far.
+**Status:** Module 0 (Docker Compose baseline), Module 1 (SOAP→REST→Gateway), and Module 2 (Keycloak/OAuth2 — both authorization-code+PKCE and client-credentials flows) are built and verified. Everything from `pki/` down in the table above hasn't been built yet — see `DECISIONS.md` for build order and `NOTES.md` for what's simplified so far.
 
 ## Stack
 
-Java 21 + Spring Boot 3, Keycloak (OIDC), Kafka/Redpanda, Docker Compose (local dev), `kind`/`minikube` (Kubernetes stage).
+Java 21 + Spring Boot 4.1.0, Keycloak (OIDC), Kafka/Redpanda, Docker Compose (local dev), `kind`/`minikube` (Kubernetes stage).
 
 ## Running locally
 
@@ -30,7 +30,13 @@ Java 21 + Spring Boot 3, Keycloak (OIDC), Kafka/Redpanda, Docker Compose (local 
 docker compose up
 ```
 
-Each service exposes a health endpoint; `docker compose ps` should show every service `healthy`.
+Boots `identity-provider`, `legacy-core-soap`, `core-facade-rest`, and `api-gateway`, health-gated in that order. **`customer-web` is not in `docker-compose.yml`** — it's a browser-facing OAuth2 client and has to run on the host so both the browser and its own backend reach Keycloak the same way (see NOTES.md). Run it separately:
+
+```bash
+cd customer-web && ./mvnw spring-boot:run
+```
+
+Then open `http://localhost:8083` and log in as `robert` / `changeme123`. See [`identity-provider/AUTH_WALKTHROUGH.md`](identity-provider/AUTH_WALKTHROUGH.md) for both OAuth2 flows walked one HTTP call at a time.
 
 ## Non-goal
 

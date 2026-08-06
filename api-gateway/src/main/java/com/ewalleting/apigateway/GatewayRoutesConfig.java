@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFunctions.uri;
@@ -21,10 +22,14 @@ public class GatewayRoutesConfig {
 
     @Bean
     public RouterFunction<ServerResponse> coreFacadeRoute(
-            @Value("${downstream.core-facade-rest.base-url}") String coreFacadeBaseUrl) {
+            @Value("${downstream.core-facade-rest.base-url}") String coreFacadeBaseUrl,
+            ServiceTokenProvider serviceTokenProvider) {
         return route("core_facade_rest")
                 .route(path("/api/accounts/**").or(path("/api/customers/**")), http())
                 .before(uri(coreFacadeBaseUrl))
+                .before(request -> ServerRequest.from(request)
+                        .header("Authorization", "Bearer " + serviceTokenProvider.getAccessToken())
+                        .build())
                 .build();
     }
 }

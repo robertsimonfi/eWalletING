@@ -21,6 +21,7 @@
         <module>legacy-core-soap</module>
         <module>core-facade-rest</module>
         <module>api-gateway</module>
+        <module>customer-web</module>
     </modules>
 
 </project>

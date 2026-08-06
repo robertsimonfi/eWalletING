@@ -1,6 +1,11 @@
 spring:
   application:
     name: core-facade-rest
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/ewalleting/protocol/openid-connect/certs}
 
 server:
   port: 8082

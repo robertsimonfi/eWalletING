@@ -1,0 +1,57 @@
+{
+  "realm": "ewalleting",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 300,
+  "clients": [
+    {
+      "clientId": "customer-web",
+      "name": "Customer Web (authorization-code + PKCE)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8083/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "api-gateway",
+      "name": "API Gateway (client-credentials, service-to-service)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "api-gateway-dev-secret",
+      "redirectUris": []
+    }
+  ],
+  "users": [
+    {
+      "username": "robert",
+      "enabled": true,
+      "firstName": "Robert",
+      "lastName": "Simonfi",
+      "email": "robert@ewalleting.local",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "changeme123",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

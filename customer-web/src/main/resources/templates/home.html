@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>customer-web — logged in</title>
+    <style>
+        body { font-family: -apple-system, Segoe UI, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; color: #1a1d23; }
+        h1 { margin-bottom: 4px; }
+        .sub { color: #6b7280; margin-top: 0; }
+        section { margin-top: 32px; }
+        h2 { border-bottom: 1px solid #d8dce1; padding-bottom: 6px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+        td, th { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        th { color: #6b7280; width: 220px; }
+        textarea { width: 100%; height: 90px; font-family: Consolas, monospace; font-size: 11px; margin-top: 8px; }
+        .hint { background: #eef2ff; border: 1px solid #4f5bd5; border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-top: 12px; }
+        code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Welcome, <span th:text="${fullName}">Name</span></h1>
+    <p class="sub">Logged in as <code th:text="${username}">username</code> via Keycloak (authorization-code + PKCE)</p>
+
+    <section>
+        <h2>ID token — proves who you are</h2>
+        <p>Issued to <em>this app</em>, about <em>you</em>. It's how <code>customer-web</code> knows who just logged in.</p>
+        <table>
+            <tr th:each="claim : ${idTokenClaims}">
+                <th th:text="${claim.key}">claim</th>
+                <td th:text="${claim.value}">value</td>
+            </tr>
+        </table>
+        <p>Raw ID token (copy this to decode by hand):</p>
+        <textarea readonly th:text="${idTokenRaw}"></textarea>
+    </section>
+
+    <section>
+        <h2>Access token — proves what this app is allowed to do</h2>
+        <p>A separate token, opaque to this app — <code>customer-web</code> doesn't need to understand its claims, it just
+           attaches it to API calls made on your behalf. Expires <span th:text="${accessTokenExpiresAt}"></span>.</p>
+        <textarea readonly th:text="${accessTokenRaw}"></textarea>
+    </section>
+
+    <section>
+        <div class="hint">
+            <strong>Decode either token by hand — no library, no jwt.io:</strong>
+            a JWT is three base64url segments joined by dots: <code>header.payload.signature</code>.
+            Take the middle segment, then in a terminal:
+            <pre>echo '&lt;payload segment&gt;' | base64 -d</pre>
+            (add <code>==</code> padding if it complains about invalid length). You'll get the raw JSON claims —
+            same content the table above already parsed for you, but now you've seen the mechanism, not the abstraction.
+        </div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: customer-web
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: customer-web
+            client-authentication-method: none
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/ewalleting}
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

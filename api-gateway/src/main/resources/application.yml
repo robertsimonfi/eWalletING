@@ -1,6 +1,17 @@
 spring:
   application:
     name: api-gateway
+  security:
+    oauth2:
+      client:
+        registration:
+          core-facade:
+            client-id: ${KEYCLOAK_CLIENT_ID:api-gateway}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:api-gateway-dev-secret}
+            authorization-grant-type: client_credentials
+        provider:
+          core-facade:
+            token-uri: ${KEYCLOAK_TOKEN_URI:http://localhost:8180/realms/ewalleting/protocol/openid-connect/token}
 
 server:
   port: 8080
