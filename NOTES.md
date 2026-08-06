@@ -6,4 +6,8 @@ Entries are added as each module is built.
 
 ---
 
-*(no entries yet — the first ones land with Module 1)*
+## Module 1 — `legacy-core-soap`
+
+- **Fixed in-memory data, no persistence.** A real core-banking mainframe transaction hits a database/CICS region; here `getAccountBalance`/`getCustomerRecord` read from two hardcoded `Map`s. Safe to simplify because the point of this module is the *contract shape and transport* (WSDL, SOAP envelope, fault handling), not data access.
+- **One fault type.** Real core-banking SOAP services distinguish many fault categories (validation, authorization, downstream timeout...). Here there's a single `recordNotFoundFault`/`RecordNotFoundException` mapped to a SOAP Client fault, enough to demonstrate the REST facade has to translate SOAP faults into HTTP status codes.
+- **No WS-Security.** The brief calls out WS-Security as a real-world SOAP standard; this stub has no authentication on the SOAP endpoint at all. Left out because Module 2/3 cover auth and TLS properly at the gateway layer instead — layering security at the facade/gateway rather than the legacy service is itself realistic (legacy systems are often the reason a facade+gateway exists).
