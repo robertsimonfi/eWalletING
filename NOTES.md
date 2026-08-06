@@ -6,6 +6,11 @@ Entries are added as each module is built.
 
 ---
 
+## Module 0 — Docker Compose baseline
+
+- **`apt-get install curl` in the runtime stage of every Dockerfile**, purely so `docker compose`'s healthcheck has something to call `/actuator/health` with. A leaner production image would use a `HEALTHCHECK` built on something already in the JRE base image (or Spring Boot's own process-exit-code liveness) instead of pulling in a package manager layer — traded a slightly heavier image for a healthcheck that's trivial to read and debug.
+- **`depends_on: condition: service_healthy`** chains the startup order (soap → facade → gateway) so a service never starts routing before what it depends on is actually ready to answer, not just "container started." Verified live: `docker compose up` brought all three up in that order and every one reported `healthy`.
+
 ## Module 1 — `legacy-core-soap`
 
 - **Fixed in-memory data, no persistence.** A real core-banking mainframe transaction hits a database/CICS region; here `getAccountBalance`/`getCustomerRecord` read from two hardcoded `Map`s. Safe to simplify because the point of this module is the *contract shape and transport* (WSDL, SOAP envelope, fault handling), not data access.

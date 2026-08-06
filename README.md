@@ -18,7 +18,7 @@ Where something here is simplified relative to the real spec or a real bank's st
 | `outbox-publisher/`, `kafka-consumer-demo/` | Transactional outbox → Kafka event backbone |
 | `k8s/` | Deployment/Service/HPA manifests |
 
-Modules not yet listed above haven't been built yet — see `DECISIONS.md` for build order.
+**Status:** Module 0 (Docker Compose baseline) and Module 1 (SOAP→REST→Gateway) are built and verified. Everything below `identity-provider/` in the table above hasn't been built yet — see `DECISIONS.md` for build order and `NOTES.md` for what's simplified so far.
 
 ## Stack
 

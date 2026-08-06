@@ -1,0 +1,43 @@
+services:
+  legacy-core-soap:
+    build: ./legacy-core-soap
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  core-facade-rest:
+    build: ./core-facade-rest
+    ports:
+      - "8082:8082"
+    environment:
+      SOAP_ENDPOINT: http://legacy-core-soap:8081/ws
+    depends_on:
+      legacy-core-soap:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      CORE_FACADE_BASE_URL: http://core-facade-rest:8082
+    depends_on:
+      core-facade-rest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
