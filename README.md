@@ -13,12 +13,12 @@ Where something here is simplified relative to the real spec or a real bank's st
 | [`api-gateway/`](api-gateway/) | Spring Cloud Gateway — routing, rate limiting, logging, client-credentials to core-facade-rest |
 | [`identity-provider/`](identity-provider/) | Keycloak, realm pre-configured for both OAuth2 flows this sandbox uses |
 | [`customer-web/`](customer-web/) | OAuth2 authorization-code + PKCE client — real browser login against Keycloak |
-| `pki/` | Mini CA + TLS/mTLS scripts |
+| [`pki/`](pki/) | Two-tier mini CA — HTTPS on api-gateway, mTLS between api-gateway and core-facade-rest |
 | `credential-issuer/`, `mock-wallet-cli/`, `credential-verifier/` | Mock EUDI Wallet: issuance, selective disclosure, trust-list verification |
 | `outbox-publisher/`, `kafka-consumer-demo/` | Transactional outbox → Kafka event backbone |
 | `k8s/` | Deployment/Service/HPA manifests |
 
-**Status:** Module 0 (Docker Compose baseline), Module 1 (SOAP→REST→Gateway), and Module 2 (Keycloak/OAuth2 — both authorization-code+PKCE and client-credentials flows) are built and verified. Everything from `pki/` down in the table above hasn't been built yet — see `DECISIONS.md` for build order and `NOTES.md` for what's simplified so far.
+**Status:** Module 0 (Docker Compose baseline), Module 1 (SOAP→REST→Gateway), Module 2 (Keycloak/OAuth2 — both flows), and Module 3 (mini CA, HTTPS, mTLS) are built and verified. Everything from `credential-issuer/` down in the table above hasn't been built yet — see `DECISIONS.md` for build order and `NOTES.md` for what's simplified so far.
 
 ## Stack
 
@@ -26,11 +26,17 @@ Java 21 + Spring Boot 4.1.0, Keycloak (OIDC), Kafka/Redpanda, Docker Compose (lo
 
 ## Running locally
 
+Generate the mini CA and certificates first — `docker-compose.yml` mounts them in but doesn't create them:
+
+```bash
+cd pki && ./generate-certs.sh
+```
+
 ```bash
 docker compose up
 ```
 
-Boots `identity-provider`, `legacy-core-soap`, `core-facade-rest`, and `api-gateway`, health-gated in that order. **`customer-web` is not in `docker-compose.yml`** — it's a browser-facing OAuth2 client and has to run on the host so both the browser and its own backend reach Keycloak the same way (see NOTES.md). Run it separately:
+Boots `identity-provider`, `legacy-core-soap`, `core-facade-rest`, and `api-gateway`, health-gated in that order. `api-gateway` serves HTTPS (self-signed by the mini CA — expect a browser warning or use `curl -k`); `core-facade-rest` requires a client certificate on top of that (mTLS) plus a valid OAuth2 Bearer token — two independent layers, see NOTES.md. **`customer-web` is not in `docker-compose.yml`** — it's a browser-facing OAuth2 client and has to run on the host so both the browser and its own backend reach Keycloak the same way (see NOTES.md). Run it separately:
 
 ```bash
 cd customer-web && ./mvnw spring-boot:run

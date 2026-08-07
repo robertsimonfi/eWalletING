@@ -9,6 +9,19 @@ spring:
 
 server:
   port: 8082
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEY_STORE:../pki/certs/core-facade-server.p12}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: core-facade-server
+    # This is what makes it MUTUAL TLS: the server also demands a client
+    # certificate, not just proving its own identity. "need" (vs "want") rejects
+    # the handshake outright if no valid client cert is presented.
+    client-auth: need
+    trust-store: ${SSL_TRUST_STORE:../pki/certs/truststore.p12}
+    trust-store-password: ${SSL_TRUST_STORE_PASSWORD:changeit}
+    trust-store-type: PKCS12
 
 management:
   endpoints:
@@ -21,6 +34,16 @@ management:
   health:
     circuitbreakers:
       enabled: true
+  server:
+    # A separate, plain-HTTP port for health/metrics only. server.ssl.client-auth:
+    # need above applies to the WHOLE connector it's set on — a Docker healthcheck
+    # (or any monitoring tool) has no client certificate to present, so it can't even
+    # complete the TLS handshake to reach /actuator/health on the main mTLS port.
+    # Splitting management onto its own port is the standard fix, not a workaround.
+    # Spring Boot inherits server.ssl.* onto this port too unless told not to.
+    port: 8092
+    ssl:
+      enabled: false
 
 # Overridden by SOAP_ENDPOINT env var in docker-compose (service DNS name instead of localhost)
 legacy-core-soap:

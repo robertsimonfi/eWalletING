@@ -34,11 +34,16 @@ services:
   core-facade-rest:
     build: ./core-facade-rest
     ports:
-      - "8082:8082"
+      - "8082:8082"   # HTTPS, mTLS required — see server.ssl.client-auth
+      - "8092:8092"   # plain-HTTP health/metrics only, see application.yml
       - "5006:5005" # remote debug port — attach IntelliJ here
+    volumes:
+      - ./pki/certs:/certs:ro
     environment:
       SOAP_ENDPOINT: http://legacy-core-soap:8081/ws
       KEYCLOAK_JWK_SET_URI: http://identity-provider:8080/realms/ewalleting/protocol/openid-connect/certs
+      SSL_KEY_STORE: /certs/core-facade-server.p12
+      SSL_TRUST_STORE: /certs/truststore.p12
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       legacy-core-soap:
@@ -46,7 +51,9 @@ services:
       identity-provider:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      # The main port requires a client certificate at the TLS layer — a healthcheck
+      # has none, so it hits the separate plain-HTTP management port instead.
+      test: ["CMD", "curl", "-f", "http://localhost:8092/actuator/health"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -55,13 +62,18 @@ services:
   api-gateway:
     build: ./api-gateway
     ports:
-      - "8080:8080"
+      - "8080:8080"   # HTTPS
       - "5007:5005" # remote debug port — attach IntelliJ here
+    volumes:
+      - ./pki/certs:/certs:ro
     environment:
-      CORE_FACADE_BASE_URL: http://core-facade-rest:8082
+      CORE_FACADE_BASE_URL: https://core-facade-rest:8082
       KEYCLOAK_TOKEN_URI: http://identity-provider:8080/realms/ewalleting/protocol/openid-connect/token
       KEYCLOAK_CLIENT_ID: api-gateway
       KEYCLOAK_CLIENT_SECRET: api-gateway-dev-secret
+      SSL_KEY_STORE: /certs/api-gateway-server.p12
+      MTLS_CLIENT_KEY_STORE: /certs/api-gateway-client.p12
+      MTLS_TRUST_STORE: /certs/truststore.p12
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       core-facade-rest:
@@ -69,7 +81,9 @@ services:
       identity-provider:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      # -k: the healthcheck doesn't need to validate the chain, just confirm the
+      # server answers — our mini CA isn't in the container's system trust store.
+      test: ["CMD", "curl", "-fk", "https://localhost:8080/actuator/health"]
       interval: 5s
       timeout: 3s
       retries: 10

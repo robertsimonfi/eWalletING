@@ -23,6 +23,7 @@ Thumbs.db
 *.key
 *.p12
 *.srl
+pki/certs/
 
 # Kubernetes local state
 .kube/
